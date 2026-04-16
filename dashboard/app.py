@@ -12,6 +12,7 @@ import streamlit as st
 from pathlib import Path
 from datetime import datetime
 import json
+import sqlite3
 
 # ── Résolution des imports relatifs ──────────────────────────────────────────
 ROOT = Path(__file__).parent.parent
@@ -22,6 +23,7 @@ from utils.pdf_generator import generer_pdf_commande, generer_pdf_recommandation
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 SUPPLIER_API_URL = "http://localhost:5001"
+DB_PATH = ROOT / "data" / "warehouse.db"
 
 URGENCE_COLORS = {"critique": "#ff4757", "élevée": "#ff6b35", "moyenne": "#ffa502", "faible": "#2ed573"}
 URGENCE_ICONS  = {"critique": "🔴", "élevée": "🟠", "moyenne": "🟡", "faible": "🟢"}
@@ -64,6 +66,27 @@ def passer_commande(matiere, quantite, fournisseur_id, decision_id, delai_type="
         return resp.json()
     except Exception as e:
         return {"statut": "erreur", "message": str(e)}
+
+
+def charger_historique_local(limit: int = 50) -> pd.DataFrame:
+    if not DB_PATH.exists():
+        return pd.DataFrame()
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query(
+            """
+            SELECT id, matiere, quantite, fournisseur_nom AS fournisseur, statut,
+                 delai_jours, date_livraison_prevue, prix_total, created_at
+            FROM commande_fournisseur
+            ORDER BY id DESC LIMIT ?
+            """,
+            conn,
+            params=(limit,)
+        )
+        conn.close()
+        return df
+    except Exception:
+        return pd.DataFrame()
 
 
 # ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -780,18 +803,24 @@ def page_historique(agent: GroqAgent):
     """, unsafe_allow_html=True)
 
     try:
-        resp = requests.get(f"{SUPPLIER_API_URL}/historique_commandes", timeout=5)
-        if resp.status_code == 200:
-            commandes = resp.json()
-            if commandes:
-                df = pd.DataFrame(commandes)
-                st.dataframe(df, use_container_width=True, hide_index=True)
-            else:
-                st.markdown('<div class="info-banner">📭 Aucune commande enregistrée pour l\'instant.</div>', unsafe_allow_html=True)
-        else:
-            st.error("Impossible de charger l'historique.")
-    except Exception as e:
-        st.error(f"Erreur : {e}")
+      resp = requests.get(f"{SUPPLIER_API_URL}/historique_commandes", timeout=5)
+      if resp.status_code == 200:
+        commandes = resp.json()
+        if commandes:
+          df = pd.DataFrame(commandes)
+          st.dataframe(df, use_container_width=True, hide_index=True)
+          return
+        st.markdown('<div class="info-banner">📭 Aucune commande enregistrée pour l\'instant.</div>', unsafe_allow_html=True)
+        return
+      st.warning("API historique indisponible, lecture locale en cours…")
+    except Exception:
+      st.warning("API historique indisponible, lecture locale en cours…")
+
+    df_local = charger_historique_local()
+    if not df_local.empty:
+      st.dataframe(df_local, use_container_width=True, hide_index=True)
+    else:
+      st.markdown('<div class="info-banner">📭 Aucun historique local disponible.</div>', unsafe_allow_html=True)
 
 
 def page_donnees(agent: GroqAgent):

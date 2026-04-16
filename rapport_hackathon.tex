@@ -1,0 +1,312 @@
+% Rapport technique StockIA - Hackathon The 24 Build-Off IA Agentique
+% Auteur: Equipe projet
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\onehalfspacing
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=black,
+  citecolor=black
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{StockIA}
+\lhead{Rapport technique}
+\cfoot{\thepage}
+
+\titleformat{\chapter}{\normalfont\huge\bfseries}{\thechapter.}{1em}{}
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\renewcommand{\contentsname}{Table des mati\`eres}
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\Huge\bfseries StockIA\\}
+  \vspace{0.6cm}
+  {\Large Rapport technique de projet\\}
+  \vspace{0.4cm}
+  {\large Hackathon The 24 Build-Off IA Agentique\\}
+  \vspace{1.2cm}
+ 
+  \vspace{0.6cm}
+  {\large \textbf{\'Equipe Innovia}\\}
+  \vspace{0.3cm}
+  {\large Amaali Oussama\\
+  Yousra Karrouch\\
+  Najat Aderdour\\
+  Wijdane Abou Zaid}
+  \vfill
+  {\large Date: 16 avril 2026}
+\end{titlepage}
+
+\pagenumbering{roman}
+\tableofcontents
+\cleardoublepage
+
+\chapter*{R\'esum\'e technique}
+\addcontentsline{toc}{chapter}{R\'esum\'e technique}
+StockIA est un syst\`eme de gestion intelligente des stocks qui automatise la d\'ecision d\'achat par un moteur agentique combinant pr\'evision, LLM et r\`egles m\'etier. La solution fournit une recommandation explicable, une validation humaine, une s\'election fournisseur multi-crit\`eres et une g\'en\'eration documentaire, avec persistance des d\'ecisions. Le rapport d\'etaille le probl\`eme cibl\'e, l\'architecture, la solution, les technologies, les algorithmes utilis\'es, l\'evaluation de l\'efficacit\'e, les consid\'erations \`ethiques et de protection des donn\'ees, ainsi que le mod\`ele \'economique et la strat\'egie d\'impl\'ementation.
+
+\cleardoublepage
+\pagenumbering{arabic}
+
+\chapter{Description du probl\`eme cibl\'e et impact}
+\section{Probl\`eme cibl\'e}
+La gestion des stocks industriels souffre d\'un manque d\'anticipation, d\'une visibilit\'e partielle sur la consommation future et d\'un processus de d\'ecision encore majoritairement manuel. Cela cr\'ee des ruptures de stock, des surstocks et des d\'ecisions d\'achat non optimis\'ees.
+
+\section{Impact chiffr\'e et d\'etaille}
+Les impacts moyens observ\'es se traduisent par :
+\begin{itemize}
+  \item \textbf{Rupture de stock : 5 \`a 10\% du chiffre d\'affaires annuel perdu.} La rupture se traduit par des ventes non r\'ealis\'ees, des arr\^ets de production, des retards de livraison et des p\'enalit\'es contractuelles. L\'effet d\'image et la perte de confiance client amplifient la baisse de chiffre d\'affaires sur le moyen terme.
+  \item \textbf{Surstock (commandes excessives) : 15 \`a 20\% du capital immobilis\'e.} L\'immobilisation de tr\'esorerie augmente les co\^uts de stockage, d\'egrade la rotation des stocks et expose \`a l\'obsolescence ou \`a la d\'et\'erioration des mati\`eres. La capacit\'e d\'investissement de l\'entreprise est r\'eduite.
+  \item \textbf{Mauvaise n\'egociation fournisseurs : 8 \`a 12\% de surco\^ut sur les achats.} Des prix unitaires non optimis\'es, des conditions de paiement d\'efavorables ou des d\'elais non ma\^itris\'es augmentent le co\^ut de revient et diminuent les marges.
+  \item \textbf{Temps acheteur manuel : 60 \`a 70\% du temps sur des t\^aches r\'ep\'etitives.} La collecte d\'informations, la comparaison de devis et le suivi administratif mobilisent des ressources humaines sur des activit\'es \`a faible valeur strat\'egique, ce qui ralentit la r\'eactivit\'e globale.
+\end{itemize}
+
+\section{Cons\'equences op\'erationnelles}
+Ces impacts provoquent une d\'et\'erioration de la performance industrielle, une baisse de comp\'etitivit\'e et une r\'eduction de la marge. La transformation du processus de d\'ecision d\'achat est donc un levier prioritaire.
+
+\cleardoublepage
+
+\chapter{Donn\'ees et sources}
+\section{Sources internes}
+Les donn\'ees proviennent des stocks, de la consommation par produit et des commandes de production. Elles sont structur\'ees en tables coh\'erentes pour permettre le calcul pr\'evisionnel.
+
+\section{Sources fournisseurs}
+Le r\'ef\'erentiel fournisseurs inclut prix unitaires, d\'elais et qualit\'e, utilis\'es pour la recommandation et l\'ex\'ecution des commandes.
+
+\cleardoublepage
+
+\chapter{M\'ethodologie}
+\section{Pipeline de d\'ecision}
+La m\'ethodologie suit un pipeline agentique : ingestion, calcul pr\'evisionnel, d\'ecision LLM ou r\`egles, validation humaine, puis ex\'ecution via l\'API fournisseurs.
+
+\section{Tra\c{c}abilit\'e}
+Chaque d\'ecision est enregistr\'ee avec sa source, son statut et ses param\`etres, afin de garantir auditabilit\'e et am\'elioration continue.
+
+\cleardoublepage
+
+\chapter{Architecture}
+\section{Vue d\'ensemble}
+L\'architecture suit un pipeline agentique en six blocs : ingestion, pr\'evision, d\'ecision, validation, sourcing fournisseur et ex\'ecution avec tra\c{c}abilit\'e.
+
+\section{Composants}
+\begin{itemize}
+  \item \textbf{Ingestion de donn\'ees} : stocks, consommation, commandes de production.
+  \item \textbf{Calcul pr\'evisionnel} : consommation projet\'ee et stock futur.
+  \item \textbf{Moteur agentique} : LLM + r\`egles m\'etier de secours.
+  \item \textbf{Validation humaine} : acceptation, modification ou rejet.
+  \item \textbf{API fournisseurs} : recommandations multi-crit\`eres.
+  \item \textbf{Persistance et documents} : historique et bons de commande.
+\end{itemize}
+
+\section{Flux d\'ecisionnel}
+\begin{itemize}
+  \item Calcul stock actuel, consommation pr\'evue, stock futur.
+  \item Construction d\'un prompt et appel LLM.
+  \item En cas d\'erreur ou de throttling, fallback r\`egles simples.
+  \item Enregistrement de la d\'ecision et validation humaine.
+  \item S\'election fournisseur et g\'en\'eration du bon de commande.
+\end{itemize}
+
+\cleardoublepage
+
+\chapter{Solution propos\'ee}
+\section{Principe}
+StockIA automatise la recommandation d\'achat \`a partir de donn\'ees r\'eelles, fournit une justification lisible et s\'int\`egre au processus d\'achat via un contr\^ole humain obligatoire.
+
+\section{Raisonnement, autonomie et interactions avec le r\'eel}
+L\'agent IA applique un raisonnement hybride. Il calcule d\'abord des indicateurs objectifs (consommation pr\'evue, stock futur, seuils) puis produit une d\'ecision structur\'ee et justifi\'ee. Lorsque le LLM est disponible, l\'agent g\'en\`ere une recommandation argument\'ee ; en cas d\'indisponibilit\'e, il bascule automatiquement sur des r\`egles m\'etier d\'eterministes, garantissant la continuit\'e du service.
+
+L\'autonomie est contr\^ol\'ee: l\'agent propose, l\'humain valide, puis l\'action r\'eelle est ex\'ecut\'ee via l\'API fournisseurs (passation de commande, d\'elais, statut). Cette boucle connecte l\'IA au monde r\'eel tout en maintenant la tra\c{c}abilit\'e et la gouvernance.
+
+\section{Fonctionnalit\'es cl\'es}
+\begin{itemize}
+  \item calcul de consommation pr\'evisionnelle ;
+  \item d\'ecision LLM ou fallback r\`egles ;
+  \item recommandation de quantit\'e et urgence ;
+  \item comparaison fournisseurs (prix, d\'elai, qualit\'e) ;
+  \item g\'en\'eration de PDF de commande ;
+  \item tra\c{c}abilit\'e compl\`ete des d\'ecisions.
+\end{itemize}
+
+\cleardoublepage
+
+\chapter{Technologies}
+\section{Stack technique}
+\begin{itemize}
+  \item Python pour la logique de calcul et d\'ecision.
+  \item Pandas pour le traitement des donn\'ees.
+  \item Streamlit pour l\'interface de validation.
+  \item Flask pour l\'API fournisseurs.
+  \item SQLite pour la persistance locale.
+  \item ReportLab pour la g\'en\'eration PDF.
+  \item LLMs via Groq ou un fournisseur compatible.
+\end{itemize}
+
+\section{Justification}
+Cette stack permet un prototypage rapide, une ex\'ecution locale ou cloud et une extension vers des environnements industriels sans verrouillage technologique.
+
+\cleardoublepage
+
+\chapter{Algorithmes utilis\'es}
+\section{Consommation pr\'evisionnelle}
+\[
+\text{Conso\_pr\'evue} = \sum_{i} \left( Q_i \times \frac{B_i}{100} \right)
+\]
+\section{Stock futur}
+\[
+\text{Stock\_futur} = \text{Stock\_actuel} - \text{Conso\_pr\'evue}
+\]
+\section{R\`egles de d\'ecision}
+\begin{itemize}
+  \item Stock futur < 0 : commander en urgence critique.
+  \item Stock futur < seuil : commander en urgence moyenne ou \`elev\'ee.
+  \item Stock futur >= seuil : attendre.
+\end{itemize}
+
+\section{Scoring fournisseur}
+Le score combine qualit\'e, d\'elai et prix total afin de prioriser les offres les plus pertinentes.
+
+\cleardoublepage
+
+\chapter{\'Evaluation de l\'efficacit\'e}
+\section{Indicateurs}
+\begin{itemize}
+  \item taux de rupture \`a 30 jours ;
+  \item taux de surstock ;
+  \item d\'elai moyen de d\'ecision ;
+  \item taux d\'acceptation des recommandations ;
+  \item \`economies d\'achat ;
+  \item taux d\'erreur et de repli.
+\end{itemize}
+
+\section{R\'esultats attendus}
+Pour une PME industrielle avec 500 000 MAD de stock moyen : r\'eduction du surstock de 15 \`a 25\%, \`evitement des ruptures jusqu\'\`a 90\%, gain de 8 heures par semaine et \`economies sur commandes de 10 \`a 15\%.
+
+\section{Synth\`ese ROI}
+\begin{longtable}{p{6cm} p{6cm}}
+\toprule
+El\'ement & Valeur \\
+\midrule
+Co\^ut abonnement annuel & 25 000 MAD \\
+\'Economies g\'en\'er\'ees (stock + ruptures) & 120 000 MAD \\
+ROI net estim\'e & 95 000 MAD \\
+D\'elai de retour & Inf\'erieur \`a 3 mois \\
+\bottomrule
+\end{longtable}
+
+\cleardoublepage
+
+\chapter{Limites et risques}
+\section{Limites}
+La qualit\'e des recommandations d\'epend de la fiabilit\'e des donn\'ees et de la disponibilit\'e du LLM. Le repli par r\`egles garantit la continuit\'e, mais n\'apporte pas toujours la m\^eme finesse d\'argumentation.
+
+\section{Risques}
+Les risques principaux concernent la d\'ependance aux fournisseurs LLM, l\'adoption organisationnelle et la variabilit\'e des d\'elais r\'eels de livraison.
+
+\cleardoublepage
+
+\chapter{Consid\'erations \`ethiques et protection des donn\'ees}
+\section{Principes}
+\begin{itemize}
+  \item transparence des d\'ecisions et justification lisible ;
+  \item supervision humaine obligatoire ;
+  \item tra\c{c}abilit\'e et auditabilit\'e ;
+  \item minimisation des donn\'ees.
+\end{itemize}
+
+\section{Protection des donn\'ees}
+Les mesures recommand\'ees incluent le chiffrement des cl\'es, le contr\^ole d\'acc\`es, la journalisation des d\'ecisions et la s\'eparation des environnements de test et de production.
+
+\cleardoublepage
+
+\chapter{Mod\`ele \'economique}
+\section{Option SaaS mensuel}
+Abonnement selon la taille de l\'entreprise, facilitant l\'adoption progressive.
+
+\section{Option commission sur \`economies}
+Facturation proportionnelle aux gains r\'eels, avec risque client r\'eduit.
+
+\section{Option licence + int\'egration}
+Licence annuelle avec frais d\'int\'egration et services premium.
+
+\section{Tableau r\'ecapitulatif}
+\begin{longtable}{p{5cm} p{8cm}}
+\toprule
+Option & Description \\
+\midrule
+SaaS mensuel & Abonnement selon taille entreprise \\
+Commission & Pourcentage des \`economies r\'ealis\'ees \\
+Licence + int\'egration & Forfait d\'acc\`es + services \`a la carte \\
+\bottomrule
+\end{longtable}
+
+\cleardoublepage
+
+\chapter{Strat\'egie d\'impl\'ementation}
+\section{Phase 1 : prototype}
+Int\'egration des donn\'ees, validation du flux agentique et d\'emonstrations initiales.
+
+\section{Phase 2 : pilotes}
+D\'eploiement chez 3 \`a 5 industriels, collecte d\'indicateurs, ajustement des seuils.
+
+\section{Phase 3 : industrialisation}
+S\'ecurit\'e, monitoring, int\'egration ERP, standardisation et documentation.
+
+\section{Phase 4 : autonomisation}
+Automatisation graduelle, optimisation avanc\'ee, apprentissage continu et extension fournisseurs.
+
+\cleardoublepage
+
+\chapter{Perspectives}
+\section{Extension fonctionnelle}
+Int\'egration d\'indicateurs pr\'edictifs avanc\'es, gestion multi-sites et enrichissement du catalogue fournisseurs.
+
+\section{Industrialisation}
+Renforcement de la s\'ecurit\'e, monitoring en temps r\'eel et int\'egration ERP pour une cha\^ine d\'approvisionnement plus autonome.
+
+\cleardoublepage
+
+\chapter{Conclusion}
+StockIA apporte une solution technique robuste pour automatiser la d\'ecision d\'achat, r\'eduire les pertes et am\'eliorer la performance industrielle. Le prototype est pr\^et pour des pilotes et une industrialisation rapide.
+
+\cleardoublepage
+
+\chapter{Bibliographie}
+\addcontentsline{toc}{chapter}{Bibliographie}
+\begin{thebibliography}{9}
+  \bibitem{arda-stockouts} ARDA. \textit{The Ultimate Guide to Stockouts in Manufacturing and How to Avoid Them}.\newline
+  \url{https://www.arda.cards/post/the-ultimate-guide-to-stockouts-in-manufacturing-and-how-to-avoid-them}
+
+  \bibitem{bossman-impact} Bossman, L. \textit{The Hidden Financial Impact of Stockouts in Manufacturing}.\newline
+  \url{https://www.linkedin.com/pulse/hidden-financial-impact-stockouts-manufacturing-larry-bossman-t6k2c}
+
+  \bibitem{appwrk-cpg} Appwrk. \textit{Why CPG Brands Lose 15\% Revenue to Stockouts and How AI Fixes It}.\newline
+  \url{https://appwrk.com/insights/why-cpg-brands-lose-15-revenue-to-stockouts-and-how-ai-fixes-it}
+\end{thebibliography}
+
+\end{document}

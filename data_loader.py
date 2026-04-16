@@ -56,13 +56,18 @@ def init_database():
             id                    INTEGER PRIMARY KEY AUTOINCREMENT,
             matiere               TEXT    NOT NULL,
             quantite              REAL    NOT NULL,
+            fournisseur_id        INTEGER,
+            fournisseur_nom       TEXT,
             statut                TEXT    NOT NULL,   -- accepté/retardé/refusé
             delai_jours           INTEGER,
             date_livraison_prevue TEXT,
+            prix_total            REAL,
             decision_ia_id        INTEGER,            -- FK vers ia_decisions
             created_at            TEXT    DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    _ensure_commande_fournisseur_schema(conn)
 
     # ── Table des décisions IA ────────────────────────────────────────────
     cur.execute("""
@@ -91,6 +96,24 @@ def init_database():
 
     conn.close()
     print("✅ Base de données prête.")
+
+
+def _ensure_commande_fournisseur_schema(conn: sqlite3.Connection):
+    """Ajoute les colonnes manquantes dans commande_fournisseur si besoin."""
+    cur = conn.cursor()
+    cur.execute("PRAGMA table_info(commande_fournisseur)")
+    existing = {row[1] for row in cur.fetchall()}
+
+    missing_columns = [
+        ("fournisseur_id", "INTEGER"),
+        ("fournisseur_nom", "TEXT"),
+        ("prix_total", "REAL"),
+    ]
+
+    for col_name, col_type in missing_columns:
+        if col_name not in existing:
+            cur.execute(f"ALTER TABLE commande_fournisseur ADD COLUMN {col_name} {col_type}")
+    conn.commit()
 
 
 def _importer_stocks(conn: sqlite3.Connection):
