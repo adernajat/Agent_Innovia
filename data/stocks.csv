@@ -1,0 +1,6 @@
+id,nom,stock_actuel,stock_securite,seuil_reappro,qte_reappro_defaut
+1,Acier,150,100,200,300
+2,Plastique,300,50,150,200
+3,Cuivre,80,30,100,150
+4,Aluminium,200,60,120,250
+5,PVC,120,40,80,180

@@ -1,0 +1,15 @@
+produit,matiere,quantite_par_100_unites
+Produit A,Acier,50
+Produit A,Plastique,20
+Produit A,Cuivre,10
+Produit A,Aluminium,5
+Produit B,Acier,30
+Produit B,Plastique,15
+Produit B,Cuivre,5
+Produit C,Acier,20
+Produit C,Plastique,10
+Produit C,Cuivre,15
+Produit D,PVC,40
+Produit D,Aluminium,25
+Produit E,Plastique,30
+Produit E,PVC,20
